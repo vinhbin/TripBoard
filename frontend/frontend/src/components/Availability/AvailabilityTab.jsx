@@ -233,15 +233,14 @@ export default function AvailabilityTab({ trip }) {
                   {memberStatuses.map(({ member, status }) => (
                     <div key={member._id} className="flex items-center gap-2 text-sm">
                       <div
-                        className={`w-3 h-3 rounded-full ${
-                          status === 'can'
-                            ? 'bg-green-500'
-                            : status === 'maybe'
+                        className={`w-3 h-3 rounded-full ${status === 'can'
+                          ? 'bg-green-500'
+                          : status === 'maybe'
                             ? 'bg-yellow-500'
                             : status === 'cannot'
-                            ? 'bg-red-500'
-                            : 'bg-gray-300'
-                        }`}
+                              ? 'bg-red-500'
+                              : 'bg-gray-300'
+                          }`}
                       />
                       <span className={member._id === user.id ? 'font-semibold' : ''}>
                         {member.name} {member._id === user.id && '(You)'}
