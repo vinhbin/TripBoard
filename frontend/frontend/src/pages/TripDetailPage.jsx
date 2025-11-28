@@ -476,7 +476,7 @@ export default function TripDetailPage() {
                 </div>
                   <div className="flex items-center gap-2">
                   {member._id === trip.owner?._id && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full dark:bg-slate-700 dark:text-slate-100 dark:border dark:border-slate-500">
+                    <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-amber-300 dark:text-slate-900 dark:border dark:border-amber-400">
                       Owner
                     </span>
                   )}
