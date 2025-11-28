@@ -97,7 +97,12 @@ export default function FlightTab({ trip }) {
 
   const handleBookFlight = (flight) => {
     setSelectedFlight(flight);
-    window.open(flight.bookingLink || '#', '_blank');
+    if (flight.bookingLink) {
+      window.open(flight.bookingLink, '_blank', 'noopener,noreferrer');
+    } else {
+      // No booking link provided by API; just store the selection and show info below
+      setError('No booking link available for this offer. Saved selection below.');
+    }
   };
 
   return (
@@ -381,8 +386,31 @@ export default function FlightTab({ trip }) {
                   Select Flight
                 </button>
               </div>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {selectedFlight && (
+        <div className="bg-blue-50 dark:bg-slate-900 dark:border-slate-700 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">
+            Selected flight
+          </h4>
+          <div className="flex items-center justify-between">
+            <div className="text-gray-800 dark:text-slate-200">
+              <div className="text-xl font-bold">
+                ${selectedFlight.price?.total} {selectedFlight.price?.currency}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-slate-300">
+                Round-trip • {searchParams.adults} pax • {selectedFlight.itineraries?.length || 0} segments each way
+              </div>
             </div>
-          ))}
+            {!selectedFlight.bookingLink && (
+              <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-300 dark:text-amber-900">
+                No booking link provided
+              </span>
+            )}
+          </div>
         </div>
       )}
 
