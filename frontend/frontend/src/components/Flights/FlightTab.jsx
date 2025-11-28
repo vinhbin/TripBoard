@@ -233,6 +233,19 @@ export default function FlightTab({ trip }) {
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <input
+              id="showNoLink"
+              type="checkbox"
+              checked={showNoLink}
+              onChange={(e) => setShowNoLink(e.target.checked)}
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+            />
+            <label htmlFor="showNoLink" className="text-sm text-gray-700 dark:text-slate-200">
+              Show offers without booking links (may require manual booking)
+            </label>
+          </div>
+
           <div className="bg-blue-50 dark:bg-slate-900 dark:border-slate-700 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-2">
               <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
