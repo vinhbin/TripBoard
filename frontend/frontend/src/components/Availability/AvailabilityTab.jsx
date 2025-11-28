@@ -8,7 +8,6 @@ export default function AvailabilityTab({ trip }) {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const MAX_DAYS = 90;
-  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchAvailabilities();
