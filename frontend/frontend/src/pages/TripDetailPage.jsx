@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../utils/api';
 import AvailabilityTab from '../components/Availability/AvailabilityTab';
 import MapTab from '../components/Map/MapTab';
+import FlightTab from '../components/Flights/FlightTab';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -313,6 +314,21 @@ export default function TripDetailPage() {
               </div>
             </button>
             <button
+              onClick={() => setActiveTab('flights')}
+              className={`py-3 px-4 font-semibold text-sm rounded-lg border transition ${
+                activeTab === 'flights'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                  : 'bg-transparent text-gray-700 border-transparent hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Flights
+              </div>
+            </button>
+            <button
               onClick={() => setActiveTab('map')}
               className={`py-3 px-4 font-semibold text-sm rounded-lg border transition ${
                 activeTab === 'map'
@@ -571,6 +587,7 @@ export default function TripDetailPage() {
         </div>
 
         {activeTab === 'availability' && <AvailabilityTab trip={trip} />}
+        {activeTab === 'flights' && <FlightTab trip={trip} />}
         {activeTab === 'map' && <MapTab trip={trip} />}
       </main>
     </div>

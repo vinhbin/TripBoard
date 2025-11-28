@@ -12,6 +12,7 @@ const authRoutes = require('./routes/auth');
 const tripRoutes = require('./routes/trips');
 const availabilityRoutes = require('./routes/availability');
 const pinRoutes = require('./routes/pins');
+const flightRoutes = require('./routes/flights');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -65,6 +66,7 @@ app.use(session({
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/flights', flightRoutes);
 
 // Public health check before any generic /api middleware
 app.get('/api/health', (req, res) => {
