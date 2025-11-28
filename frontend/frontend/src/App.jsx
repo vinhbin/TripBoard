@@ -5,6 +5,7 @@ import { useAuth } from './context/AuthContext';
 import api from './utils/api';
 import Dashboard from './pages/Dashboard';
 import TripDetailPage from './pages/TripDetailPage';
+import { useTheme } from './context/ThemeContext';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -18,6 +19,7 @@ const AuthPage = () => {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ email: '', password: '', name: '' });
   const [message, setMessage] = useState('');
+  const { theme, toggleTheme } = useTheme();
 
   if (user) return <Navigate to="/dashboard" replace />;
 
@@ -55,9 +57,14 @@ const AuthPage = () => {
           <h1>TripBoard</h1>
           <p className="subtitle">Collaborative trip planner</p>
         </div>
-        <button className="ghost" onClick={handleHealth}>
-          Ping API
-        </button>
+        <div className="flex gap-2">
+          <button className="ghost" onClick={toggleTheme}>
+            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+          <button className="ghost" onClick={handleHealth}>
+            Ping API
+          </button>
+        </div>
       </header>
 
       {message && <div className="message">{message}</div>}

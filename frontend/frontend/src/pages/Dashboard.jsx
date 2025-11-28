@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../utils/api';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,27 +98,35 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 dark:text-slate-100 transition-colors">
+      <header className="bg-white shadow-sm dark:bg-slate-800 dark:border-b dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">TripBoard</h1>
-              <p className="text-sm text-gray-600">Welcome back, {user?.name}!</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">TripBoard</h1>
+              <p className="text-sm text-gray-600 dark:text-slate-300">Welcome back, {user?.name}!</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
-            >
-              Logout
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTheme}
+                className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-100 dark:border-slate-600 dark:hover:bg-slate-700"
+              >
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition dark:text-slate-100 dark:hover:bg-slate-700"
+              >
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Your Trips</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">Your Trips</h2>
           <button
             onClick={() => setShowCreateForm((prev) => !prev)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
@@ -129,8 +139,8 @@ export default function Dashboard() {
         </div>
 
         {showCreateForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Trip</h3>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6 dark:bg-slate-800 dark:border dark:border-slate-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Create New Trip</h3>
             <form onSubmit={handleCreateTrip} className="space-y-4">
               {formError && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{formError}</div>
@@ -138,7 +148,7 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Trip Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Trip Name *</label>
                   <input
                     type="text"
                     name="name"
@@ -146,12 +156,12 @@ export default function Dashboard() {
                     onChange={handleInputChange}
                     required
                     placeholder="Summer Vacation 2024"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Destination *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Destination *</label>
                   <input
                     type="text"
                     name="destination"
@@ -159,31 +169,31 @@ export default function Dashboard() {
                     onChange={handleInputChange}
                     required
                     placeholder="Paris, France"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Start Date *</label>
                   <input
                     type="date"
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">End Date *</label>
                   <input
                     type="date"
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -226,27 +236,27 @@ export default function Dashboard() {
                 d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
               />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No trips yet</h3>
-            <p className="mt-1 text-sm text-gray-500">Get started by creating your first trip.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-slate-100">No trips yet</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-300">Get started by creating your first trip.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {trips.map((trip) => (
               <div
                 key={trip._id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer dark:bg-slate-800 dark:border dark:border-slate-700"
                 onClick={() => navigate(`/trips/${trip._id}`)}
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-semibold text-gray-900 flex-1">{trip.name}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 flex-1">{trip.name}</h3>
                     {trip.owner?._id === user.id && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteTrip(trip._id);
                         }}
-                        className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition"
+                        className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition dark:hover:bg-red-900/40"
                         title="Delete trip"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
