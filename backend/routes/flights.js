@@ -56,11 +56,46 @@ const haversineKm = (a, b) => {
   return R * c;
 };
 
+const resolveFromList = (query) => {
+  const q = query.trim().toUpperCase();
+  // Direct code match
+  const codeHit = airports.find((a) => a.code === q.slice(0, 3));
+  if (codeHit) return codeHit;
+
+  // City/name contains
+  const cityHit = airports.find(
+    (a) => a.city.toUpperCase().includes(q) || a.name.toUpperCase().includes(q),
+  );
+  if (cityHit) return cityHit;
+
+  return null;
+};
+
 router.get('/lookup', async (req, res) => {
   try {
     const query = req.query.query;
     if (!query || query.trim().length < 3) {
       return res.status(400).json({ error: 'Please provide a city or address (min 3 chars)' });
+    }
+
+    // Quick local match for airport codes/cities without geocoding
+    const direct = resolveFromList(query);
+    if (direct) {
+      return res.json({
+        query,
+        resolved: {
+          lat: direct.lat,
+          lng: direct.lng,
+          displayName: `${direct.city}, ${direct.country}`,
+        },
+        airport: {
+          code: direct.code,
+          name: direct.name,
+          city: direct.city,
+          country: direct.country,
+          distanceKm: 0,
+        },
+      });
     }
 
     // Geocode with Nominatim (free, no key)
