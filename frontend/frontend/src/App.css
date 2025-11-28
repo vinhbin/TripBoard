@@ -5,6 +5,10 @@
   color: #0f172a;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+.dark .page {
+  color: #e5e7eb;
+  background: #0f172a;
+}
 
 .header {
   display: flex;
@@ -12,10 +16,16 @@
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
+.dark .header {
+  color: #e5e7eb;
+}
 
 .subtitle {
   margin: 0.25rem 0 0;
   color: #475569;
+}
+.dark .subtitle {
+  color: #cbd5e1;
 }
 
 .message {
@@ -27,6 +37,11 @@
   margin-bottom: 1rem;
   font-weight: 500;
 }
+.dark .message {
+  background: #0ea5e9;
+  border-color: #0ea5e9;
+  color: #0b1220;
+}
 
 .panel {
   background: #ffffff;
@@ -35,6 +50,11 @@
   padding: 1.25rem;
   margin-bottom: 1rem;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+.dark .panel {
+  background: #0f172a;
+  border-color: #1f2937;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .panel-header {
@@ -58,6 +78,9 @@
   font-weight: 600;
   color: #0f172a;
 }
+.dark .form label {
+  color: #e5e7eb;
+}
 
 input {
   padding: 0.65rem 0.75rem;
@@ -71,6 +94,11 @@ input:focus {
   outline: none;
   border-color: #06b6d4;
   box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+}
+.dark input {
+  background: #0b1220;
+  border-color: #1f2937;
+  color: #e5e7eb;
 }
 
 button {
@@ -101,6 +129,10 @@ button:disabled {
   border: 1px solid #e2e8f0;
   box-shadow: none;
 }
+.dark .ghost {
+  color: #e5e7eb;
+  border-color: #1f2937;
+}
 
 .link {
   background: transparent;
@@ -108,6 +140,9 @@ button:disabled {
   border: none;
   padding: 0;
   box-shadow: none;
+}
+.dark .link {
+  color: #93c5fd;
 }
 
 .grid {
@@ -133,6 +168,10 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.dark .trip-card {
+  background: #0f172a;
+  border-color: #1f2937;
 }
 
 .eyebrow {
