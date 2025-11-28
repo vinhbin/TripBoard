@@ -1,5 +1,5 @@
-// Load env vars locally; Render/Vercel will inject env directly
-if (process.env.NODE_ENV !== 'production') {
+// Load env vars locally; skip in Render/production
+if (process.env.NODE_ENV !== 'production' && !process.env.RENDER) {
   require('dotenv').config();
 }
 const express = require('express');
@@ -15,6 +15,7 @@ const pinRoutes = require('./routes/pins');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.RENDER;
 
 // Behind proxies (Render) so secure cookies work
 app.set('trust proxy', 1);
@@ -55,8 +56,8 @@ app.use(session({
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax'
   }
 }));
 
