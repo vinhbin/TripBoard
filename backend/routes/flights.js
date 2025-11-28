@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const { requireAuth } = require('../middleware/auth');
+const airports = require('../data/airports.json');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -40,6 +41,83 @@ const getAmadeusToken = async () => {
     throw new Error('Failed to authenticate with flight API');
   }
 };
+
+const haversineKm = (a, b) => {
+  const toRad = (v) => (v * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+  const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  return R * c;
+};
+
+router.get('/lookup', async (req, res) => {
+  try {
+    const query = req.query.query;
+    if (!query || query.trim().length < 3) {
+      return res.status(400).json({ error: 'Please provide a city or address (min 3 chars)' });
+    }
+
+    // Geocode with Nominatim (free, no key)
+    const geo = await axios.get('https://nominatim.openstreetmap.org/search', {
+      params: {
+        format: 'json',
+        q: query,
+        limit: 1,
+      },
+      headers: {
+        'User-Agent': 'TripBoard/1.0 (contact@example.com)',
+      },
+    });
+
+    const hit = geo.data?.[0];
+    if (!hit) {
+      return res.status(404).json({ error: 'Location not found' });
+    }
+
+    const lat = parseFloat(hit.lat);
+    const lng = parseFloat(hit.lon);
+
+    // Find nearest airport
+    let nearest = null;
+    let best = Infinity;
+    airports.forEach((apt) => {
+      const d = haversineKm({ lat, lng }, { lat: apt.lat, lng: apt.lng });
+      if (d < best) {
+        best = d;
+        nearest = apt;
+      }
+    });
+
+    if (!nearest) {
+      return res.status(404).json({ error: 'No airport found nearby' });
+    }
+
+    res.json({
+      query,
+      resolved: {
+        lat,
+        lng,
+        displayName: hit.display_name,
+      },
+      airport: {
+        code: nearest.code,
+        name: nearest.name,
+        city: nearest.city,
+        country: nearest.country,
+        distanceKm: Math.round(best * 10) / 10,
+      },
+    });
+  } catch (error) {
+    console.error('Airport lookup error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to resolve nearest airport' });
+  }
+});
 
 router.post('/search', async (req, res) => {
   try {

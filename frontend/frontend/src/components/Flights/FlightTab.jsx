@@ -14,6 +14,9 @@ export default function FlightTab({ trip }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedFlight, setSelectedFlight] = useState(null);
+  const [originHint, setOriginHint] = useState('');
+  const [destHint, setDestHint] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   useEffect(() => {
     setSearchParams((prev) => ({
@@ -49,6 +52,31 @@ export default function FlightTab({ trip }) {
       console.error('Flight search error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLookup = async (field) => {
+    const value = searchParams[field];
+    if (!value || value.length < 3) {
+      setError('Enter at least 3 characters to detect nearest airport');
+      return;
+    }
+    setLookupLoading(true);
+    setError('');
+    try {
+      const { data } = await api.get('/flights/lookup', { params: { query: value } });
+      const hint = `${data.airport.code} — ${data.airport.name} (${data.airport.city}) • ${data.airport.distanceKm} km`;
+      if (field === 'origin') {
+        setOriginHint(`Nearest: ${hint}`);
+        setSearchParams((prev) => ({ ...prev, origin: data.airport.code }));
+      } else {
+        setDestHint(`Nearest: ${hint}`);
+        setSearchParams((prev) => ({ ...prev, destination: data.airport.code }));
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to find nearest airport');
+    } finally {
+      setLookupLoading(false);
     }
   };
 
@@ -88,9 +116,19 @@ export default function FlightTab({ trip }) {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
               />
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
-                Enter 3-letter airport code (LAX, JFK, ORD)
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => handleLookup('origin')}
+                  disabled={lookupLoading}
+                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-800"
+                >
+                  {lookupLoading ? 'Detecting…' : 'Detect nearest airport'}
+                </button>
+                {originHint && (
+                  <span className="text-xs text-gray-600 dark:text-slate-300">{originHint}</span>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
@@ -105,7 +143,17 @@ export default function FlightTab({ trip }) {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
               />
-              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Pre-filled from trip</p>
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => handleLookup('destination')}
+                  disabled={lookupLoading}
+                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-800"
+                >
+                  {lookupLoading ? 'Detecting…' : 'Detect nearest airport'}
+                </button>
+                {destHint && <span className="text-xs text-gray-600 dark:text-slate-300">{destHint}</span>}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">
