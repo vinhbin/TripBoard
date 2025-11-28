@@ -11,6 +11,19 @@ export default function AvailabilityTab({ trip }) {
   const [viewMode, setViewMode] = useState('my'); // my | group
   const MAX_DAYS = 90;
 
+  const getCalendarDays = () => {
+    const dates = [];
+    const start = new Date(trip.startDate);
+    const rawEnd = new Date(trip.endDate);
+    const cappedEnd = new Date(start);
+    cappedEnd.setDate(cappedEnd.getDate() + MAX_DAYS - 1);
+    const end = rawEnd < cappedEnd ? rawEnd : cappedEnd;
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    return dates;
+  };
+
   useEffect(() => {
     fetchAvailabilities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,9 +225,8 @@ export default function AvailabilityTab({ trip }) {
             <button
               key={opt.key}
               onClick={() => setSelectedStatus(opt.key)}
-              className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
-                selectedStatus === opt.key ? `${opt.color} text-white ring-2 ring-white` : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${selectedStatus === opt.key ? `${opt.color} text-white ring-2 ring-white` : 'bg-white/20 text-white hover:bg-white/30'
+                }`}
             >
               <span className="text-xl">{opt.icon}</span>
               {opt.label}
@@ -230,17 +242,15 @@ export default function AvailabilityTab({ trip }) {
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode('my')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                viewMode === 'my' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'my' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               My Availability
             </button>
             <button
               onClick={() => setViewMode('group')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                viewMode === 'group' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'group' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               Group Heatmap
             </button>
@@ -344,15 +354,14 @@ export default function AvailabilityTab({ trip }) {
                               {dateStatuses.map(({ member, status }) => (
                                 <div key={member._id} className="flex items-center gap-1">
                                   <div
-                                    className={`w-2 h-2 rounded-full ${
-                                      status === 'can'
+                                    className={`w-2 h-2 rounded-full ${status === 'can'
                                         ? 'bg-green-400'
                                         : status === 'maybe'
-                                        ? 'bg-yellow-400'
-                                        : status === 'cannot'
-                                        ? 'bg-red-400'
-                                        : 'bg-gray-400'
-                                    }`}
+                                          ? 'bg-yellow-400'
+                                          : status === 'cannot'
+                                            ? 'bg-red-400'
+                                            : 'bg-gray-400'
+                                      }`}
                                   />
                                   <span>{member.name}</span>
                                 </div>
