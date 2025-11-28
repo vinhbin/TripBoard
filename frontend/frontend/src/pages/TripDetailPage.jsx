@@ -13,6 +13,15 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('availability');
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    destination: '',
+    startDate: '',
+    endDate: '',
+  });
+  const [editError, setEditError] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteError, setInviteError] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -34,6 +43,12 @@ export default function TripDetailPage() {
       setTrip(data.trip);
       setError('');
       setPlanText(data.trip.planText || '');
+      setEditForm({
+        name: data.trip.name || '',
+        destination: data.trip.destination || '',
+        startDate: data.trip.startDate?.slice(0, 10) || '',
+        endDate: data.trip.endDate?.slice(0, 10) || '',
+      });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load trip');
       console.error(err);
@@ -116,6 +131,45 @@ export default function TripDetailPage() {
       year: 'numeric',
     });
 
+  const handleEditChange = (e) => {
+    setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const validateDates = () => {
+    const start = new Date(editForm.startDate);
+    const end = new Date(editForm.endDate);
+    if (isNaN(start) || isNaN(end)) return 'Please provide valid dates';
+    if (end <= start) return 'End date must be after start date';
+    const dayCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (dayCount > 365) return 'Trip length cannot exceed 365 days';
+    return null;
+  };
+
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+    setEditError('');
+    const dateError = validateDates();
+    if (dateError) {
+      setEditError(dateError);
+      return;
+    }
+    setEditSaving(true);
+    try {
+      const { data } = await api.put(`/trips/${id}`, {
+        name: editForm.name,
+        destination: editForm.destination,
+        startDate: editForm.startDate,
+        endDate: editForm.endDate,
+      });
+      setTrip(data.trip);
+      setEditing(false);
+    } catch (err) {
+      setEditError(err.response?.data?.error || 'Failed to update trip');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -164,51 +218,63 @@ export default function TripDetailPage() {
 
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold mb-2">{trip.name}</h1>
-          <div className="flex flex-wrap gap-4 text-blue-100">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <span>{trip.destination}</span>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{trip.name}</h1>
+              <div className="flex flex-wrap gap-4 text-blue-100">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  <span>{trip.destination}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>
+                    {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                  <span>
+                    {trip.members.length} member{trip.members.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span>
-                {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-              <span>
-                {trip.members.length} member{trip.members.length !== 1 ? 's' : ''}
-              </span>
-            </div>
+            {trip.owner?._id === user.id && (
+              <button
+                onClick={() => setEditing(true)}
+                className="px-4 py-2 bg-white/15 text-white rounded-lg border border-white/30 hover:bg-white/25 transition text-sm"
+              >
+                Edit Trip
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -261,6 +327,104 @@ export default function TripDetailPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {trip.owner?._id === user.id && (
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Edit Trip</h3>
+                <p className="text-sm text-gray-600">Update trip details and dates (max 365 days)</p>
+              </div>
+              <button
+                onClick={() => setEditing(!editing)}
+                className="text-sm px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+              >
+                {editing ? 'Close' : 'Edit'}
+              </button>
+            </div>
+            {editing && (
+              <form className="space-y-4" onSubmit={handleEditSave}>
+                {editError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                    {editError}
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Trip name</label>
+                    <input
+                      name="name"
+                      value={editForm.name}
+                      onChange={handleEditChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Destination</label>
+                    <input
+                      name="destination"
+                      value={editForm.destination}
+                      onChange={handleEditChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start date</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={editForm.startDate}
+                      onChange={handleEditChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End date</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={editForm.endDate}
+                      onChange={handleEditChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={editSaving}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {editSaving ? 'Saving...' : 'Save changes'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(false);
+                      setEditError('');
+                      setEditForm({
+                        name: trip.name || '',
+                        destination: trip.destination || '',
+                        startDate: trip.startDate?.slice(0, 10) || '',
+                        endDate: trip.endDate?.slice(0, 10) || '',
+                      });
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">
+                  End date must be after start date. Trips longer than 365 days are not allowed.
+                </p>
+              </form>
+            )}
+          </div>
+        )}
+
         {/* Members + Invite */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
