@@ -22,7 +22,7 @@ app.set('trust proxy', 1);
 // Connect to MongoDB
 connectDB();
 
-// CORS configuration with allow-list (comma-separated origins)
+// CORS configuration with allow-list (comma-separated origins) plus *.vercel.app fallback
 const allowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
   .map((o) => o.trim())
@@ -30,10 +30,10 @@ const allowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL ||
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl) or in allow-list
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true);
+    const inList = allowedOrigins.includes(origin);
+    const isVercel = origin.endsWith('.vercel.app');
+    if (inList || isVercel) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true
