@@ -19,6 +19,7 @@ export default function FlightTab({ trip }) {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupTarget, setLookupTarget] = useState(null);
   const [foundForDate, setFoundForDate] = useState(null);
+  const [showNoLink, setShowNoLink] = useState(false);
 
   useEffect(() => {
     setSearchParams((prev) => ({
@@ -60,14 +61,16 @@ export default function FlightTab({ trip }) {
     try {
       const baseDepart = trip.startDate.split('T')[0];
       const baseReturn = trip.endDate.split('T')[0];
-      let available = await searchWithDates(baseDepart, baseReturn);
+      let results = await searchWithDates(baseDepart, baseReturn);
+      let available = showNoLink ? results : results.filter((f) => f.bookingLink);
 
       if (!available.length) {
         const offsets = [-1, 1, -2, 2, -3, 3];
         for (const off of offsets) {
           const altDepart = toISO(shiftedDate(trip.startDate, off));
           const altReturn = toISO(shiftedDate(trip.endDate, off));
-          available = await searchWithDates(altDepart, altReturn);
+          results = await searchWithDates(altDepart, altReturn);
+          available = showNoLink ? results : results.filter((f) => f.bookingLink);
           if (available.length) {
             setFoundForDate({ depart: altDepart, return: altReturn });
             break;
@@ -77,7 +80,11 @@ export default function FlightTab({ trip }) {
 
       setFlights(available);
       if (!available.length) {
-        setError('No flights found for nearby dates. Try adjusting your search.');
+        setError(
+          showNoLink
+            ? 'No flights found for nearby dates. Try adjusting your search.'
+            : 'No bookable flights found. Enable "Show offers without booking links" to browse other options.',
+        );
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to search flights. Please try again.');
@@ -412,15 +419,22 @@ export default function FlightTab({ trip }) {
                     {searchParams.adults !== 1 ? 's' : ''}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleBookFlight(flight)}
-                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold flex items-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Select Flight
-                </button>
+                <div className="flex flex-col items-end gap-2">
+                  <button
+                    onClick={() => handleBookFlight(flight)}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Select Flight
+                  </button>
+                  {!flight.bookingLink && (
+                    <div className="text-xs text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded">
+                      No booking link provided — you may need to search this itinerary manually.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
