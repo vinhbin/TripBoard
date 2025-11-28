@@ -44,8 +44,9 @@ export default function FlightTab({ trip }) {
         adults: parseInt(searchParams.adults, 10),
         travelClass: searchParams.travelClass,
       });
-      setFlights(data.flights || []);
-      if (!data.flights?.length) {
+      const available = (data.flights || []).filter((f) => f.bookingLink);
+      setFlights(available);
+      if (!available.length) {
         setError('No flights found for these dates. Try adjusting your search.');
       }
     } catch (err) {
@@ -386,8 +387,8 @@ export default function FlightTab({ trip }) {
                   Select Flight
                 </button>
               </div>
-              </div>
-            ))}
+            </div>
+          ))}
         </div>
       )}
 
@@ -405,11 +406,6 @@ export default function FlightTab({ trip }) {
                 Round-trip • {searchParams.adults} pax • {selectedFlight.itineraries?.length || 0} segments each way
               </div>
             </div>
-            {!selectedFlight.bookingLink && (
-              <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-300 dark:text-amber-900">
-                No booking link provided
-              </span>
-            )}
           </div>
         </div>
       )}
