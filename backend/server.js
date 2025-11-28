@@ -13,6 +13,9 @@ const pinRoutes = require('./routes/pins');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Behind proxies (Render) so secure cookies work
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
