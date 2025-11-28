@@ -18,6 +18,7 @@ export default function FlightTab({ trip }) {
   const [destHint, setDestHint] = useState('');
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupTarget, setLookupTarget] = useState(null);
+  const [foundForDate, setFoundForDate] = useState(null);
 
   useEffect(() => {
     setSearchParams((prev) => ({
@@ -30,24 +31,53 @@ export default function FlightTab({ trip }) {
     setSearchParams({ ...searchParams, [e.target.name]: e.target.value });
   };
 
+  const toISO = (d) => d.toISOString().split('T')[0];
+
+  const shiftedDate = (base, offset) => {
+    const d = new Date(base);
+    d.setDate(d.getDate() + offset);
+    return d;
+  };
+
+  const searchWithDates = async (depart, ret) => {
+    const { data } = await api.post('/flights/search', {
+      origin: searchParams.origin,
+      destination: searchParams.destination,
+      departureDate: depart,
+      returnDate: ret,
+      adults: parseInt(searchParams.adults, 10),
+      travelClass: searchParams.travelClass,
+    });
+    return (data.flights || []).filter((f) => f.bookingLink);
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setFlights([]);
+    setFoundForDate(null);
     try {
-      const { data } = await api.post('/flights/search', {
-        origin: searchParams.origin,
-        destination: searchParams.destination,
-        departureDate: trip.startDate.split('T')[0],
-        returnDate: trip.endDate.split('T')[0],
-        adults: parseInt(searchParams.adults, 10),
-        travelClass: searchParams.travelClass,
-      });
-      const available = (data.flights || []).filter((f) => f.bookingLink);
+      const baseDepart = trip.startDate.split('T')[0];
+      const baseReturn = trip.endDate.split('T')[0];
+      let available = await searchWithDates(baseDepart, baseReturn);
+
+      if (!available.length) {
+        const offsets = [-1, 1, -2, 2, -3, 3];
+        for (const off of offsets) {
+          const altDepart = toISO(shiftedDate(trip.startDate, off));
+          const altReturn = toISO(shiftedDate(trip.endDate, off));
+          available = await searchWithDates(altDepart, altReturn);
+          if (available.length) {
+            setFoundForDate({ depart: altDepart, return: altReturn });
+            break;
+          }
+        }
+      }
+
       setFlights(available);
       if (!available.length) {
-        setError('No flights found for these dates. Try adjusting your search.');
+        setError('No flights found for nearby dates. Try adjusting your search.');
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to search flights. Please try again.');
@@ -196,20 +226,20 @@ export default function FlightTab({ trip }) {
             </div>
           </div>
 
-        <div className="bg-blue-50 dark:bg-slate-900 dark:border-slate-700 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-2">
-            <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="text-sm text-blue-800 dark:text-slate-200">
-              <strong>Travel Dates:</strong> {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-              <br />
-              Searching round-trip flights for these dates
-              <div className="mt-1 text-xs text-blue-700 dark:text-slate-300">
-                Tip: enter a city or address, then click “Detect nearest airport” to autofill the code.
+          <div className="bg-blue-50 dark:bg-slate-900 dark:border-slate-700 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-sm text-blue-800 dark:text-slate-200">
+                <strong>Travel Dates:</strong> {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                <br />
+                Searching round-trip flights for these dates. If none are found, we’ll try nearby days automatically.
+                <div className="mt-1 text-xs text-blue-700 dark:text-slate-300">
+                  Tip: enter a city or address, then click “Detect nearest airport” to autofill the code.
+                </div>
               </div>
             </div>
-          </div>
         </div>
 
           <button
@@ -253,6 +283,11 @@ export default function FlightTab({ trip }) {
               Round-trip • {searchParams.adults} passenger{searchParams.adults !== 1 ? 's' : ''}
             </div>
           </div>
+          {foundForDate && (
+            <div className="text-sm text-blue-700 dark:text-blue-300">
+              Showing results for {foundForDate.depart} → {foundForDate.return} (nearest available dates)
+            </div>
+          )}
 
           {flights.map((flight, index) => (
             <div
