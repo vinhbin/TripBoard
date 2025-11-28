@@ -245,8 +245,8 @@ export default function AvailabilityTab({ trip }) {
       </div>
 
       {/* Top dates */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🏆 Best Dates</h3>
+      <div className="bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">🏆 Best Dates</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {rankedDates.map(({ date, score }, index) => (
             <div key={date.toISOString()} className="border-2 border-blue-200 rounded-lg p-4 text-center bg-blue-50">
@@ -269,14 +269,14 @@ export default function AvailabilityTab({ trip }) {
       </div>
 
       {/* Simple date picker & action */}
-      <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Pick a Date</h3>
+      <div className="bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg shadow-md p-6 space-y-4 border border-transparent dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Pick a Date</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 block">Date (within trip)</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-slate-200 block">Date (within trip)</label>
             <input
               type="date"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
               min={minDate.toISOString().split('T')[0]}
               max={maxDate.toISOString().split('T')[0]}
               value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
@@ -288,7 +288,7 @@ export default function AvailabilityTab({ trip }) {
           </div>
 
           <div className="space-y-3">
-            <div className="text-sm font-medium text-gray-700">Set status</div>
+            <div className="text-sm font-medium text-gray-700 dark:text-slate-200">Set status</div>
             <div className="flex flex-wrap gap-2">
               {[
                 { key: 'can', label: 'Can Go', color: 'bg-green-500' },
@@ -308,7 +308,7 @@ export default function AvailabilityTab({ trip }) {
               <button
                 type="button"
                 onClick={() => setSelectedStatus(null)}
-                className={`px-3 py-2 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 ${selectedStatus === null ? 'ring-2 ring-offset-2 ring-blue-200' : ''
+                className={`px-3 py-2 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 dark:text-slate-100 dark:bg-slate-900 dark:border-slate-700 ${selectedStatus === null ? 'ring-2 ring-offset-2 ring-blue-200' : ''
                   }`}
               >
                 Clear
@@ -323,7 +323,7 @@ export default function AvailabilityTab({ trip }) {
               {updating ? 'Saving...' : 'Save'}
             </button>
             {selectedDate && (
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-700 dark:text-slate-200">
                 Current status:{' '}
                 <span className="font-semibold">
                   {getUserStatus(selectedDate) || 'Not set'}
@@ -334,17 +334,17 @@ export default function AvailabilityTab({ trip }) {
         </div>
 
         {selectedDate && (
-          <div className="mt-4 border-t pt-4">
-            <h4 className="font-semibold text-gray-900 mb-2">
+              <div className="mt-4 border-t pt-4 dark:border-slate-700">
+            <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-2">
               Group responses for {selectedDate.toLocaleDateString()}
             </h4>
             <div className="grid md:grid-cols-2 gap-2">
               {getDateStatuses(selectedDate).map(({ member, status }) => (
                 <div
                   key={member._id}
-                  className="flex items-center justify-between border rounded-lg px-3 py-2"
+                  className="flex items-center justify-between border rounded-lg px-3 py-2 dark:border-slate-700 dark:bg-slate-900"
                 >
-                  <span className="text-sm text-gray-800">{member.name}</span>
+                  <span className="text-sm text-gray-800 dark:text-slate-100">{member.name}</span>
                   <span
                     className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(
                       status,
@@ -361,8 +361,8 @@ export default function AvailabilityTab({ trip }) {
       </div>
 
       {/* Legend */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Legend</h3>
+      <div className="bg-white dark:bg-slate-800 dark:text-slate-100 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">Legend</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded bg-green-500 flex items-center justify-center text-white font-bold">✓</div>
@@ -377,7 +377,7 @@ export default function AvailabilityTab({ trip }) {
             <span className="text-sm">Cannot Go</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-white border-2 border-gray-300" />
+            <div className="w-8 h-8 rounded bg-white border-2 border-gray-300 dark:bg-slate-900 dark:border-slate-700" />
             <span className="text-sm">Not Set</span>
           </div>
         </div>
