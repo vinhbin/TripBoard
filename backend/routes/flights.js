@@ -58,17 +58,22 @@ const haversineKm = (a, b) => {
 
 const resolveFromList = (query) => {
   const q = query.trim().toUpperCase();
-  // Direct code match
-  const codeHit = airports.find((a) => a.code === q.slice(0, 3));
+  const tokens = q.split(/[\s,]+/).filter(Boolean);
+
+  // Direct 3-letter code match anywhere in the string
+  const codeHit = airports.find((a) => q.includes(a.code));
   if (codeHit) return codeHit;
 
-  // City/name contains
-  const cityHit = airports.find(
-    (a) => a.city.toUpperCase().includes(q) || a.name.toUpperCase().includes(q),
+  // City/name containment in either direction
+  return (
+    airports.find((a) => {
+      const city = a.city.toUpperCase();
+      const name = a.name.toUpperCase();
+      return q.includes(city) || city.includes(q) || q.includes(name) || name.includes(q);
+    }) ||
+    // token match against city tokens
+    airports.find((a) => tokens.some((t) => a.city.toUpperCase().includes(t)))
   );
-  if (cityHit) return cityHit;
-
-  return null;
 };
 
 router.get('/lookup', async (req, res) => {
