@@ -17,6 +17,7 @@ export default function FlightTab({ trip }) {
   const [originHint, setOriginHint] = useState('');
   const [destHint, setDestHint] = useState('');
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupTarget, setLookupTarget] = useState(null);
 
   useEffect(() => {
     setSearchParams((prev) => ({
@@ -62,6 +63,7 @@ export default function FlightTab({ trip }) {
       return;
     }
     setLookupLoading(true);
+    setLookupTarget(field);
     setError('');
     try {
       const { data } = await api.get('/flights/lookup', { params: { query: value } });
@@ -77,6 +79,7 @@ export default function FlightTab({ trip }) {
       setError(err.response?.data?.error || 'Failed to find nearest airport');
     } finally {
       setLookupLoading(false);
+      setLookupTarget(null);
     }
   };
 
@@ -121,9 +124,9 @@ export default function FlightTab({ trip }) {
                   type="button"
                   onClick={() => handleLookup('origin')}
                   disabled={lookupLoading}
-                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-800"
+                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-800 disabled:opacity-60"
                 >
-                  {lookupLoading ? 'Detecting…' : 'Detect nearest airport'}
+                  {lookupLoading && lookupTarget === 'origin' ? 'Detecting…' : 'Detect nearest airport'}
                 </button>
                 {originHint && (
                   <span className="text-xs text-gray-600 dark:text-slate-300">{originHint}</span>
@@ -148,9 +151,9 @@ export default function FlightTab({ trip }) {
                   type="button"
                   onClick={() => handleLookup('destination')}
                   disabled={lookupLoading}
-                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-800"
+                  className="px-3 py-1 text-xs bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-800 disabled:opacity-60"
                 >
-                  {lookupLoading ? 'Detecting…' : 'Detect nearest airport'}
+                  {lookupLoading && lookupTarget === 'destination' ? 'Detecting…' : 'Detect nearest airport'}
                 </button>
                 {destHint && <span className="text-xs text-gray-600 dark:text-slate-300">{destHint}</span>}
               </div>
@@ -187,18 +190,21 @@ export default function FlightTab({ trip }) {
             </div>
           </div>
 
-          <div className="bg-blue-50 dark:bg-slate-900 dark:border-slate-700 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="text-sm text-blue-800 dark:text-slate-200">
-                <strong>Travel Dates:</strong> {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-                <br />
-                Searching round-trip flights for these dates
+        <div className="bg-blue-50 dark:bg-slate-900 dark:border-slate-700 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-2">
+            <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-sm text-blue-800 dark:text-slate-200">
+              <strong>Travel Dates:</strong> {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+              <br />
+              Searching round-trip flights for these dates
+              <div className="mt-1 text-xs text-blue-700 dark:text-slate-300">
+                Tip: enter a city or address, then click “Detect nearest airport” to autofill the code.
               </div>
             </div>
           </div>
+        </div>
 
           <button
             type="submit"
