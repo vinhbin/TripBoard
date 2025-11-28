@@ -24,6 +24,17 @@ export default function AvailabilityTab({ trip }) {
     return dates;
   };
 
+  const isInTripRange = (date) => {
+    const start = new Date(trip.startDate);
+    const rawEnd = new Date(trip.endDate);
+    const cappedEnd = new Date(start);
+    cappedEnd.setDate(cappedEnd.getDate() + MAX_DAYS - 1);
+    const end = rawEnd < cappedEnd ? rawEnd : cappedEnd;
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+    return date >= start && date <= end;
+  };
+
   useEffect(() => {
     fetchAvailabilities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -355,12 +366,12 @@ export default function AvailabilityTab({ trip }) {
                                 <div key={member._id} className="flex items-center gap-1">
                                   <div
                                     className={`w-2 h-2 rounded-full ${status === 'can'
-                                        ? 'bg-green-400'
-                                        : status === 'maybe'
-                                          ? 'bg-yellow-400'
-                                          : status === 'cannot'
-                                            ? 'bg-red-400'
-                                            : 'bg-gray-400'
+                                      ? 'bg-green-400'
+                                      : status === 'maybe'
+                                        ? 'bg-yellow-400'
+                                        : status === 'cannot'
+                                          ? 'bg-red-400'
+                                          : 'bg-gray-400'
                                       }`}
                                   />
                                   <span>{member.name}</span>
