@@ -8,7 +8,7 @@ export default function AvailabilityTab({ trip }) {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('can'); // can | maybe | cannot
-  const [viewMode, setViewMode] = useState('my'); // my | group
+  const [selectedDate, setSelectedDate] = useState(null);
   const MAX_DAYS = 90;
 
   const getCalendarDays = () => {
@@ -182,23 +182,6 @@ export default function AvailabilityTab({ trip }) {
   };
 
   const calendarDays = getCalendarDays();
-  const monthsToShow = [];
-
-  // group days by month
-  let currentMonth = null;
-  calendarDays.forEach((day) => {
-    const monthKey = `${day.getFullYear()}-${day.getMonth()}`;
-    if (monthKey !== currentMonth) {
-      currentMonth = monthKey;
-      monthsToShow.push({
-        month: day.getMonth(),
-        year: day.getFullYear(),
-        days: [],
-      });
-    }
-    monthsToShow[monthsToShow.length - 1].days.push(day);
-  });
-
   // top dates
   const tripDates = calendarDays.filter(isInTripRange);
   const rankedDates = tripDates
@@ -211,6 +194,21 @@ export default function AvailabilityTab({ trip }) {
 
   const tripLengthDays =
     Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+
+  // set default selected date once trip loads
+  useEffect(() => {
+    if (trip?.startDate) {
+      setSelectedDate(new Date(trip.startDate));
+    }
+  }, [trip?.startDate]);
+
+  const minDate = new Date(trip.startDate);
+  const maxDate = (() => {
+    const rawEnd = new Date(trip.endDate);
+    const cappedEnd = new Date(minDate);
+    cappedEnd.setDate(cappedEnd.getDate() + MAX_DAYS - 1);
+    return rawEnd < cappedEnd ? rawEnd : cappedEnd;
+  })();
 
   if (loading) {
     return <div className="text-center py-8">Loading availability...</div>;
@@ -246,29 +244,6 @@ export default function AvailabilityTab({ trip }) {
         </div>
       </div>
 
-      {/* View toggle */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Calendar View</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode('my')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'my' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              My Availability
-            </button>
-            <button
-              onClick={() => setViewMode('group')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${viewMode === 'group' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              Group Heatmap
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Top dates */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">🏆 Best Dates</h3>
@@ -293,142 +268,119 @@ export default function AvailabilityTab({ trip }) {
         </div>
       </div>
 
-      {/* Calendar months */}
-      {monthsToShow.map((monthData) => {
-        const monthName = new Date(monthData.year, monthData.month).toLocaleDateString('en-US', {
-          month: 'long',
-          year: 'numeric',
-        });
-        const weeks = [];
-        for (let i = 0; i < monthData.days.length; i += 7) {
-          weeks.push(monthData.days.slice(i, i + 7));
-        }
+      {/* Simple date picker & action */}
+      <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Pick a Date</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 block">Date (within trip)</label>
+            <input
+              type="date"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              min={minDate.toISOString().split('T')[0]}
+              max={maxDate.toISOString().split('T')[0]}
+              value={selectedDate ? selectedDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => setSelectedDate(e.target.value ? new Date(e.target.value) : null)}
+            />
+            <p className="text-xs text-gray-500">
+              Trip window: {minDate.toLocaleDateString()} → {maxDate.toLocaleDateString()}
+            </p>
+          </div>
 
-        return (
-          <div key={`${monthData.year}-${monthData.month}`} className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">{monthName}</h3>
-            <div className="mb-4">
-              <div className="grid grid-cols-7 gap-2 mb-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
-                    {day}
-                  </div>
-                ))}
+          <div className="space-y-3">
+            <div className="text-sm font-medium text-gray-700">Set status</div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'can', label: 'Can Go', color: 'bg-green-500' },
+                { key: 'maybe', label: 'Maybe', color: 'bg-yellow-500' },
+                { key: 'cannot', label: 'Cannot', color: 'bg-red-500' },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setSelectedStatus(opt.key)}
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold text-white ${opt.color} ${selectedStatus === opt.key ? 'ring-2 ring-offset-2 ring-offset-white ring-blue-200' : ''
+                    }`}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSelectedStatus(null)}
+                className={`px-3 py-2 rounded-lg text-sm font-semibold border border-gray-300 text-gray-700 ${selectedStatus === null ? 'ring-2 ring-offset-2 ring-blue-200' : ''
+                  }`}
+              >
+                Clear
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => selectedDate && handleStatusChange(selectedDate, selectedStatus)}
+              disabled={!selectedDate || updating || !isInTripRange(selectedDate)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {updating ? 'Saving...' : 'Save'}
+            </button>
+            {selectedDate && (
+              <div className="text-sm text-gray-700">
+                Current status:{' '}
+                <span className="font-semibold">
+                  {getUserStatus(selectedDate) || 'Not set'}
+                </span>
               </div>
-              {weeks.map((week, weekIdx) => (
-                <div key={weekIdx} className="grid grid-cols-7 gap-2 mb-2">
-                  {week.map((date) => {
-                    const inRange = isInTripRange(date);
-                    const userStatus = getUserStatus(date);
-                    const isCurrentMonth = date.getMonth() === monthData.month;
-                    const colorClass =
-                      viewMode === 'my' ? getStatusColor(userStatus, inRange) : getGroupHeatmapColor(date);
-                    const dateStatuses = getDateStatuses(date);
+            )}
+          </div>
+        </div>
 
-                    return (
-                      <button
-                        key={date.toISOString()}
-                        onClick={() => inRange && handleDateClick(date)}
-                        disabled={!inRange || updating}
-                        className={`
-                          relative aspect-square rounded-lg font-medium text-sm transition-all
-                          ${colorClass}
-                          ${!isCurrentMonth ? 'opacity-30' : ''}
-                          ${inRange ? 'cursor-pointer transform hover:scale-105 shadow-sm' : 'cursor-not-allowed'}
-                          ${!inRange && !isCurrentMonth ? 'invisible' : ''}
-                          ${updating ? 'opacity-70' : ''}
-                        `}
-                        title={
-                          inRange
-                            ? `${date.toDateString()} - ${userStatus ? userStatus : 'Click to mark'}`
-                            : 'Outside trip dates'
-                        }
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <div className="text-lg">{date.getDate()}</div>
-                          {viewMode === 'group' && inRange && (
-                            <div className="text-xs font-bold mt-1">{getDateScore(date)}</div>
-                          )}
-                        </div>
-
-                        {/* Tooltip */}
-                        {inRange && (
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                            <div className="bg-gray-900 text-white text-xs rounded p-2 whitespace-nowrap">
-                              <div className="font-semibold mb-1">
-                                {date.toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </div>
-                              {dateStatuses.map(({ member, status }) => (
-                                <div key={member._id} className="flex items-center gap-1">
-                                  <div
-                                    className={`w-2 h-2 rounded-full ${status === 'can'
-                                      ? 'bg-green-400'
-                                      : status === 'maybe'
-                                        ? 'bg-yellow-400'
-                                        : status === 'cannot'
-                                          ? 'bg-red-400'
-                                          : 'bg-gray-400'
-                                      }`}
-                                  />
-                                  <span>{member.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+        {selectedDate && (
+          <div className="mt-4 border-t pt-4">
+            <h4 className="font-semibold text-gray-900 mb-2">
+              Group responses for {selectedDate.toLocaleDateString()}
+            </h4>
+            <div className="grid md:grid-cols-2 gap-2">
+              {getDateStatuses(selectedDate).map(({ member, status }) => (
+                <div
+                  key={member._id}
+                  className="flex items-center justify-between border rounded-lg px-3 py-2"
+                >
+                  <span className="text-sm text-gray-800">{member.name}</span>
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(
+                      status,
+                      true,
+                    )}`}
+                  >
+                    {status || 'Not set'}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-        );
-      })}
+        )}
+      </div>
 
       {/* Legend */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Legend</h3>
-        {viewMode === 'my' ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-green-500 flex items-center justify-center text-white font-bold">✓</div>
-              <span className="text-sm">Can Go</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-white font-bold">?</div>
-              <span className="text-sm">Maybe</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-red-500 flex items-center justify-center text-white font-bold">✗</div>
-              <span className="text-sm">Cannot Go</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-white border-2 border-gray-300" />
-              <span className="text-sm">Not Set</span>
-            </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-green-500 flex items-center justify-center text-white font-bold">✓</div>
+            <span className="text-sm">Can Go</span>
           </div>
-        ) : (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-sm text-gray-600">Worse</span>
-              <div className="flex-1 h-8 rounded-lg overflow-hidden flex">
-                <div className="flex-1 bg-red-100" />
-                <div className="flex-1 bg-orange-300" />
-                <div className="flex-1 bg-yellow-300" />
-                <div className="flex-1 bg-yellow-400" />
-                <div className="flex-1 bg-green-400" />
-                <div className="flex-1 bg-green-500" />
-              </div>
-              <span className="text-sm text-gray-600">Better</span>
-            </div>
-            <p className="text-sm text-gray-600">Score: Can (+3) • Maybe (+1) • Cannot (-2)</p>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-white font-bold">?</div>
+            <span className="text-sm">Maybe</span>
           </div>
-        )}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-red-500 flex items-center justify-center text-white font-bold">✗</div>
+            <span className="text-sm">Cannot Go</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-white border-2 border-gray-300" />
+            <span className="text-sm">Not Set</span>
+          </div>
+        </div>
       </div>
     </div>
   );
