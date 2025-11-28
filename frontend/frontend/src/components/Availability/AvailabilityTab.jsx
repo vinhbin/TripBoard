@@ -9,6 +9,8 @@ export default function AvailabilityTab({ trip }) {
   const [updating, setUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('can'); // can | maybe | cannot
   const [selectedDate, setSelectedDate] = useState(null);
+  const [rangeStart, setRangeStart] = useState(null);
+  const [rangeEnd, setRangeEnd] = useState(null);
   const MAX_DAYS = 90;
 
   const getCalendarDays = () => {
@@ -89,6 +91,66 @@ export default function AvailabilityTab({ trip }) {
     } catch (err) {
       console.error('Failed to update availability:', err);
       alert('Failed to update availability');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const applyRangeStatus = async () => {
+    if (!rangeStart || !rangeEnd) {
+      alert('Select a start and end date.');
+      return;
+    }
+    if (rangeEnd < rangeStart) {
+      alert('End date must be on or after start date.');
+      return;
+    }
+    const dates = [];
+    for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    if (!dates.every(isInTripRange)) {
+      alert('All dates must be within the trip range.');
+      return;
+    }
+    if (dates.length > MAX_DAYS) {
+      alert(`Range too large. Max ${MAX_DAYS} days.`);
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      let updated = [...availabilities];
+      for (const date of dates) {
+        const isoDate = date.toISOString().split('T')[0];
+        if (selectedStatus === null) {
+          await api.delete(`/trips/${trip._id}/availability`, { data: { date: isoDate } });
+          updated = updated.filter(
+            (a) =>
+              !(
+                new Date(a.date).toDateString() === date.toDateString() &&
+                a.userId._id === user.id
+              ),
+          );
+        } else {
+          const { data } = await api.post(`/trips/${trip._id}/availability`, {
+            date: isoDate,
+            status: selectedStatus,
+          });
+          updated = updated.filter(
+            (a) =>
+              !(
+                new Date(a.date).toDateString() === date.toDateString() &&
+                a.userId._id === user.id
+              ),
+          );
+          updated.push(data.availability);
+        }
+      }
+      setAvailabilities(updated);
+    } catch (err) {
+      console.error('Failed to update availability range:', err);
+      alert('Failed to update availability range');
     } finally {
       setUpdating(false);
     }
@@ -199,6 +261,8 @@ export default function AvailabilityTab({ trip }) {
   useEffect(() => {
     if (trip?.startDate) {
       setSelectedDate(new Date(trip.startDate));
+      setRangeStart(new Date(trip.startDate));
+      setRangeEnd(new Date(trip.startDate));
     }
   }, [trip?.startDate]);
 
@@ -336,8 +400,47 @@ export default function AvailabilityTab({ trip }) {
           </div>
         </div>
 
+        <div className="mt-6 border-t pt-4 dark:border-slate-700 space-y-3">
+          <h4 className="text-md font-semibold text-gray-900 dark:text-slate-100">Apply to date range</h4>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-200 block">Start date</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
+                min={minDate.toISOString().split('T')[0]}
+                max={maxDate.toISOString().split('T')[0]}
+                value={rangeStart ? rangeStart.toISOString().split('T')[0] : ''}
+                onChange={(e) => setRangeStart(e.target.value ? new Date(e.target.value) : null)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-200 block">End date</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
+                min={minDate.toISOString().split('T')[0]}
+                max={maxDate.toISOString().split('T')[0]}
+                value={rangeEnd ? rangeEnd.toISOString().split('T')[0] : ''}
+                onChange={(e) => setRangeEnd(e.target.value ? new Date(e.target.value) : null)}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={applyRangeStatus}
+            disabled={updating || !rangeStart || !rangeEnd}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updating ? 'Applying...' : 'Apply status to range'}
+          </button>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            Applies the selected status to every date in the chosen range (max {MAX_DAYS} days).
+          </p>
+        </div>
+
         {selectedDate && (
-              <div className="mt-4 border-t pt-4 dark:border-slate-700">
+          <div className="mt-4 border-t pt-4 dark:border-slate-700">
             <h4 className="font-semibold text-gray-900 dark:text-slate-100 mb-2">
               Group responses for {selectedDate.toLocaleDateString()}
             </h4>
