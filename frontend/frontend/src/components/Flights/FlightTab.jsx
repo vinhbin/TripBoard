@@ -49,7 +49,7 @@ export default function FlightTab({ trip }) {
       adults: parseInt(searchParams.adults, 10),
       travelClass: searchParams.travelClass,
     });
-    return (data.flights || []).filter((f) => f.bookingLink);
+    return data.flights || [];
   };
 
   const handleSearch = async (e) => {
@@ -64,9 +64,9 @@ export default function FlightTab({ trip }) {
       let results = await searchWithDates(baseDepart, baseReturn);
       let available = showNoLink ? results : results.filter((f) => f.bookingLink);
 
+      // Try forward days until we find bookable (or any, if showNoLink) up to +7
       if (!available.length) {
-        const offsets = [-1, 1, -2, 2, -3, 3];
-        for (const off of offsets) {
+        for (let off = 1; off <= 7; off++) {
           const altDepart = toISO(shiftedDate(trip.startDate, off));
           const altReturn = toISO(shiftedDate(trip.endDate, off));
           results = await searchWithDates(altDepart, altReturn);
@@ -247,7 +247,7 @@ export default function FlightTab({ trip }) {
                 </div>
               </div>
             </div>
-        </div>
+          </div>
 
           <button
             type="submit"
