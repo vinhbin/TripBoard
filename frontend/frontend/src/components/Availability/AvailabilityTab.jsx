@@ -7,6 +7,8 @@ export default function AvailabilityTab({ trip }) {
   const [availabilities, setAvailabilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const MAX_DAYS = 90;
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     fetchAvailabilities();
@@ -70,7 +72,10 @@ export default function AvailabilityTab({ trip }) {
   const getDatesInRange = () => {
     const dates = [];
     const start = new Date(trip.startDate);
-    const end = new Date(trip.endDate);
+    const rawEnd = new Date(trip.endDate);
+    const cappedEnd = new Date(start);
+    cappedEnd.setDate(cappedEnd.getDate() + MAX_DAYS - 1);
+    const end = rawEnd < cappedEnd ? rawEnd : cappedEnd;
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       dates.push(new Date(d));
     }
@@ -152,6 +157,8 @@ export default function AvailabilityTab({ trip }) {
     });
 
   const dates = getDatesInRange();
+  const tripLengthDays =
+    Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1;
 
   const rankedDates = dates
     .map((date) => ({
@@ -173,6 +180,11 @@ export default function AvailabilityTab({ trip }) {
           Click on any date to cycle through:{' '}
           <span className="font-medium">No Response → Can Go → Maybe → Cannot → No Response</span>
         </p>
+        {tripLengthDays > MAX_DAYS && (
+          <div className="mt-2 text-sm text-blue-900 font-semibold">
+            Trip is {tripLengthDays} days long. Showing the first {MAX_DAYS} days to keep things fast.
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
