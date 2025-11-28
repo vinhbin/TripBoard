@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 router.use(requireAuth);
+const MAX_TRIP_DAYS = 365;
 
 // Get all trips for current user
 router.get('/', async (req, res) => {
@@ -67,6 +68,13 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'End date must be after start date' });
     }
 
+    const dayCount = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (dayCount > MAX_TRIP_DAYS) {
+      return res
+        .status(400)
+        .json({ error: `Trip length cannot exceed ${MAX_TRIP_DAYS} days` });
+    }
+
     const trip = new Trip({
       name,
       destination,
@@ -109,6 +117,13 @@ router.put('/:id', async (req, res) => {
 
     if (trip.endDate <= trip.startDate) {
       return res.status(400).json({ error: 'End date must be after start date' });
+    }
+
+    const dayCount = Math.ceil((trip.endDate - trip.startDate) / (1000 * 60 * 60 * 24)) + 1;
+    if (dayCount > MAX_TRIP_DAYS) {
+      return res
+        .status(400)
+        .json({ error: `Trip length cannot exceed ${MAX_TRIP_DAYS} days` });
     }
 
     await trip.save();
