@@ -154,7 +154,7 @@ export default function AvailabilityTab({ trip }) {
   };
 
   const getStatusColor = (status, isInRange) => {
-    if (!isInRange) return 'bg-gray-100 text-gray-400';
+    if (!isInRange) return 'bg-gray-100 text-gray-400 dark:bg-slate-800 dark:text-slate-500';
     switch (status) {
       case 'can':
         return 'bg-green-500 text-white';
@@ -163,7 +163,7 @@ export default function AvailabilityTab({ trip }) {
       case 'cannot':
         return 'bg-red-500 text-white';
       default:
-        return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200';
+        return 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700';
     }
   };
 
@@ -249,7 +249,10 @@ export default function AvailabilityTab({ trip }) {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">🏆 Best Dates</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {rankedDates.map(({ date, score }, index) => (
-            <div key={date.toISOString()} className="border-2 border-blue-200 rounded-lg p-4 text-center bg-blue-50">
+            <div
+              key={date.toISOString()}
+              className="border-2 border-blue-200 rounded-lg p-4 text-center bg-blue-50 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
+            >
               <div className="text-sm font-semibold text-blue-600 mb-1 flex items-center justify-center gap-1">
                 {index === 0 && '🥇'}
                 {index === 1 && '🥈'}
