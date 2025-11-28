@@ -474,9 +474,11 @@ export default function TripDetailPage() {
                   <div className="font-semibold text-gray-900 text-sm">{member.name}</div>
                   <div className="text-xs text-gray-600">{member.email}</div>
                 </div>
-                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                   {member._id === trip.owner?._id && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Owner</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full dark:bg-slate-700 dark:text-slate-100 dark:border dark:border-slate-500">
+                      Owner
+                    </span>
                   )}
                   {trip.owner?._id === user.id && member._id !== trip.owner?._id && (
                     <button
