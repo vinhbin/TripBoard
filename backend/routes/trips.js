@@ -296,19 +296,20 @@ router.post('/:id/recommendations', async (req, res) => {
 
     const { preferences = '' } = req.body || {};
     const existingPlan = trip.planText || '';
+    const startDateIso = trip.startDate.toISOString().slice(0, 10);
+    const maxEnd = new Date(trip.startDate);
+    maxEnd.setDate(maxEnd.getDate() + 13); // first 14 days
+    const endDateIso = (trip.endDate < maxEnd ? trip.endDate : maxEnd).toISOString().slice(0, 10);
     const prompt = `
-You are an enthusiastic travel planner. Build a realistic day-by-day itinerary near "${trip.destination}" for ${trip.members.length} people, from ${trip.startDate
-      .toISOString()
-      .slice(0, 10)} to ${trip.endDate.toISOString().slice(0, 10)}.
+You are an enthusiastic travel planner. Build a realistic day-by-day itinerary near "${trip.destination}" for ${trip.members.length} people, covering the first 14 days (or until the trip ends) from ${startDateIso} to ${endDateIso}.
 Avoid repeating anything already in the plan:\n${existingPlan}\n
 For EACH day, include:
 - Morning activity with a popular place name + short address/cross-streets, category, and 1–2 line tip.
 - Afternoon activity (same details).
 - Evening activity (same details).
 - 3 restaurants (name + short address and 1-line tip).
-Keep entries concise (no long paragraphs). Include “Arrival day” if the start date is the first travel day, and keep pacing realistic (nearby spots). ${
-      preferences ? `Traveler preferences: ${preferences}` : ''
-    }`;
+Keep entries concise (no long paragraphs). Include “Arrival day” if the start date is the first travel day, and keep pacing realistic (nearby spots). ${preferences ? `Traveler preferences: ${preferences}` : ''
+      }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
